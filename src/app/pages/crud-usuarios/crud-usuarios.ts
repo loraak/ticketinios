@@ -10,7 +10,6 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { FloatLabelModule } from 'primeng/floatlabel';
-import { SelectModule } from 'primeng/select';
 import { PasswordModule } from 'primeng/password';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { AuthService, PERMISOS } from '../../services/auth.service';
@@ -20,7 +19,6 @@ export interface UsuarioCrud {
     nombreCompleto: string;
     email: string;
     password: string;
-    rol: 'admin' | 'usuario';
     activo: boolean;
 }
 
@@ -31,7 +29,7 @@ export interface UsuarioCrud {
         CommonModule, FormsModule, ReactiveFormsModule,
         TableModule, CardModule, ButtonModule, DialogModule,
         InputTextModule, TagModule, ToastModule, ConfirmDialogModule,
-        FloatLabelModule, SelectModule, PasswordModule,
+        FloatLabelModule, PasswordModule,
     ],
     providers: [MessageService, ConfirmationService],
     templateUrl: './crud-usuarios.html',
@@ -42,13 +40,9 @@ export class Usuarios {
     protected PERMISOS = PERMISOS;
 
     usuarios: UsuarioCrud[] = [
-        { id: '1', nombreCompleto: 'César Admin',   email: 'admin@app.com',   password: '123', rol: 'admin',   activo: true  },
-        { id: '2', nombreCompleto: 'César Usuario', email: 'usuario@app.com', password: '123', rol: 'usuario', activo: true  },
-    ];
-
-    roles = [
-        { label: 'Admin',   value: 'admin'   },
-        { label: 'Usuario', value: 'usuario' },
+        { id: '1', nombreCompleto: 'César Admin',   email: 'admin@app.com',   password: '123', activo: true  },
+        { id: '2', nombreCompleto: 'César Usuario', email: 'usuario@app.com', password: '123', activo: true  },
+        { id: '3', nombreCompleto: 'Juan Prueba',   email: 'juan@app.com',    password: '123', activo: false },
     ];
 
     modalVisible = false;
@@ -65,14 +59,13 @@ export class Usuarios {
             nombreCompleto: ['', Validators.required],
             email:          ['', [Validators.required, Validators.email]],
             password:       ['', Validators.required],
-            rol:            ['usuario', Validators.required],
         });
     }
 
     abrirModalNuevo() {
         this.modoEdicion = false;
         this.usuarioSeleccionado = null;
-        this.form.reset({ rol: 'usuario' });
+        this.form.reset();
         this.form.get('password')!.setValidators(Validators.required);
         this.form.get('password')!.updateValueAndValidity();
         this.modalVisible = true;
@@ -104,12 +97,11 @@ export class Usuarios {
             this.usuarios = [...this.usuarios];
             this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Usuario actualizado.' });
         } else {
-            const nuevo: UsuarioCrud = {
+            this.usuarios = [...this.usuarios, {
                 id: crypto.randomUUID(),
                 ...this.form.value,
                 activo: true
-            };
-            this.usuarios = [...this.usuarios, nuevo];
+            }];
             this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Usuario creado.' });
         }
         this.modalVisible = false;

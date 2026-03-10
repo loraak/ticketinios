@@ -1,47 +1,64 @@
 import { Injectable, signal, computed } from '@angular/core';
 
-export type Rol = 'admin' | 'usuario';
-
 export const PERMISOS = {
-    // Perfil
     PERFIL_EDITAR:  'perfil:editar',
     PERFIL_BAJA:    'perfil:baja',
-    // Grupos
     GROUPS_VER:     'groups:ver',
     GROUPS_ADMIN:   'groups:admin',
-    // CRUD
     CRUD_VER:       'crud:ver',
     CRUD_CREAR:     'crud:crear',
     CRUD_EDITAR:    'crud:editar',
-    CRUD_ELIMINAR:  'crud:eliminar',
-    // USUARIOS
-    USUARIOS_ADMIN: 'usuarios:admin', 
-    //TICKETS
-    TICKETS_ADMIN: 'tickets:admin',
+    USUARIOS_ADMIN: 'usuarios:admin',
+    USUARIOS_VER:    'usuarios:ver',      
+    USUARIOS_CREAR:  'usuarios:crear',    
+    USUARIOS_EDITAR: 'usuarios:editar',   
+    USUARIOS_BAJA:   'usuarios:baja',  
+    TICKETS_ADMIN:   'tickets:admin',
 } as const;
 
 export type Permiso = typeof PERMISOS[keyof typeof PERMISOS];
 
-const ROL_PERMISOS: Record<Rol, Permiso[]> = {
-    admin: Object.values(PERMISOS) as Permiso[],
-    usuario: [
-        PERMISOS.PERFIL_EDITAR,
-        PERMISOS.GROUPS_VER,
-        PERMISOS.CRUD_VER,
-    ],
-};
-
 export interface Usuario {
     id: string;
-    nombre: string;
+    nombreCompleto: string;
     email: string;
     password: string;
-    rol: Rol;
+    permisos: Permiso[];
 }
 
 const USUARIOS_MOCK: Usuario[] = [
-    { id: '1', nombre: 'César Admin',   email: 'admin@app.com',   password: '123', rol: 'admin'   },
-    { id: '2', nombre: 'César Usuario', email: 'usuario@app.com', password: '123', rol: 'usuario' },
+    {
+        id: '1',
+        nombreCompleto: 'César Admin',
+        email: 'admin@app.com',
+        password: '123',
+        permisos: [
+            PERMISOS.PERFIL_EDITAR,
+            PERMISOS.PERFIL_BAJA,
+            PERMISOS.GROUPS_VER,
+            PERMISOS.GROUPS_ADMIN,
+            PERMISOS.CRUD_VER,
+            PERMISOS.CRUD_CREAR,
+            PERMISOS.CRUD_EDITAR,
+            PERMISOS.USUARIOS_ADMIN,
+            PERMISOS.TICKETS_ADMIN,
+            PERMISOS.USUARIOS_VER,
+            PERMISOS.USUARIOS_CREAR,
+            PERMISOS.USUARIOS_EDITAR,
+            PERMISOS.USUARIOS_BAJA,
+        ],
+    },
+    {
+        id: '2',
+        nombreCompleto: 'César Usuario',
+        email: 'usuario@app.com',
+        password: '123',
+        permisos: [
+            PERMISOS.PERFIL_EDITAR,
+            PERMISOS.GROUPS_VER,
+            PERMISOS.CRUD_VER,
+        ],
+    },
 ];
 
 @Injectable({ providedIn: 'root' })
@@ -50,11 +67,7 @@ export class AuthService {
 
     readonly usuario      = this._usuario.asReadonly();
     readonly estaLogueado = computed(() => this._usuario() !== null);
-    readonly rol          = computed(() => this._usuario()?.rol ?? null);
-    readonly permisos     = computed((): Permiso[] => {
-        const u = this._usuario();
-        return u ? ROL_PERMISOS[u.rol] : [];
-    });
+    readonly permisos     = computed(() => this._usuario()?.permisos ?? []);
 
     tienePermiso(permiso: Permiso): boolean {
         return this.permisos().includes(permiso);
@@ -64,14 +77,11 @@ export class AuthService {
         return lista.some(p => this.tienePermiso(p));
     }
 
-    tieneRol(rol: Rol): boolean {
-        return this.rol() === rol;
-    }
-
     login(email: string, password: string): boolean {
-        const usuario = USUARIOS_MOCK.find(u => u.email === email && u.password === password);
+        const usuario = USUARIOS_MOCK.find(
+            u => u.email === email && u.password === password
+        );
         if (!usuario) return false;
-
         this._usuario.set(usuario);
         return true;
     }

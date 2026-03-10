@@ -7,7 +7,9 @@
             <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #1e293b;">
                 Gestión de Usuarios
             </h2>
-            <p-button label="Nuevo Usuario" icon="pi pi-plus" (onClick)="abrirModalNuevo()"></p-button>
+            @if (authService.tienePermiso(PERMISOS.USUARIOS_CREAR)) {
+                <p-button label="Nuevo Usuario" icon="pi pi-plus" (onClick)="abrirModalNuevo()"></p-button>
+            }
         </div>
     </ng-template>
 
@@ -16,9 +18,10 @@
             <tr>
                 <th>Nombre</th>
                 <th>Email</th>
-                <th>Rol</th>
                 <th>Estado</th>
-                <th style="width: 10rem;">Acciones</th>
+                @if (authService.tieneAlgunPermiso([PERMISOS.USUARIOS_EDITAR, PERMISOS.USUARIOS_BAJA])) {
+                    <th style="width: 10rem;">Acciones</th>
+                }
             </tr>
         </ng-template>
 
@@ -28,37 +31,38 @@
                 <td>{{ usuario.email }}</td>
                 <td>
                     <p-tag
-                        [value]="usuario.rol === 'admin' ? 'Admin' : 'Usuario'"
-                        [severity]="usuario.rol === 'admin' ? 'warn' : 'info'">
-                    </p-tag>
-                </td>
-                <td>
-                    <p-tag
                         [value]="usuario.activo ? 'Activo' : 'Baja'"
                         [severity]="usuario.activo ? 'success' : 'danger'">
                     </p-tag>
                 </td>
-                <td>
-                    <div class="flex gap-2">
-                        <p-button icon="pi pi-pencil" [rounded]="true" [text]="true"
-                            pTooltip="Editar usuario"
-                            (onClick)="abrirModalEditar(usuario)"
-                            [disabled]="!usuario.activo">
-                        </p-button>
-                        <p-button icon="pi pi-ban" [rounded]="true" [text]="true"
-                            severity="danger"
-                            pTooltip="Dar de baja"
-                            (onClick)="confirmarBaja(usuario)"
-                            [disabled]="!usuario.activo">
-                        </p-button>
-                    </div>
-                </td>
+                @if (authService.tieneAlgunPermiso([PERMISOS.USUARIOS_EDITAR, PERMISOS.USUARIOS_BAJA])) {
+                    <td>
+                        <div class="flex gap-2">
+                            @if (authService.tienePermiso(PERMISOS.USUARIOS_EDITAR)) {
+                                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true"
+                                    pTooltip="Editar usuario"
+                                    (onClick)="abrirModalEditar(usuario)"
+                                    [disabled]="!usuario.activo">
+                                </p-button>
+                            }
+                            @if (authService.tienePermiso(PERMISOS.USUARIOS_BAJA)) {
+                                <p-button icon="pi pi-ban" [rounded]="true" [text]="true"
+                                    severity="danger"
+                                    pTooltip="Dar de baja"
+                                    (onClick)="confirmarBaja(usuario)"
+                                    [disabled]="!usuario.activo">
+                                </p-button>
+                            }
+                        </div>
+                    </td>
+                }
             </tr>
         </ng-template>
 
         <ng-template pTemplate="emptymessage">
             <tr>
-                <td colspan="5" class="text-center p-4 text-color-secondary">
+                <td [attr.colspan]="authService.tieneAlgunPermiso([PERMISOS.USUARIOS_EDITAR, PERMISOS.USUARIOS_BAJA]) ? 4 : 3"
+                    class="text-center p-4 text-color-secondary">
                     No hay usuarios registrados.
                 </td>
             </tr>
@@ -110,14 +114,6 @@
             @if (form.get('password')!.touched && form.get('password')!.errors?.['required']) {
                 <small class="p-error block" style="margin-top: -1rem;">La contraseña es requerida.</small>
             }
-
-            <p-floatlabel>
-                <p-select inputId="rol" formControlName="rol"
-                    [options]="roles" optionLabel="label" optionValue="value"
-                    styleClass="w-full">
-                </p-select>
-                <label for="rol">Rol</label>
-            </p-floatlabel>
 
         </div>
     </form>
