@@ -27,63 +27,135 @@
     </div>
 
     <div class="flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="m-0 text-2xl font-bold text-color">Detalle del Grupo</h1>
-            <p class="m-0 mt-1 text-color-secondary">Total de tickets: {{ tickets.length }}</p>
+        <div class="flex align-items-center gap-3">
+            <h1 class="m-0 text-2xl font-bold text-color">Tickets del Grupo</h1>
+            <div class="p-selectbutton border-round">
+                <p-button class="mr-2" [outlined]="vistaActual !== 'kanban'" icon="pi pi-th-large" (onClick)="vistaActual = 'kanban'"></p-button>
+                <p-button [outlined]="vistaActual !== 'tabla'" icon="pi pi-list" (onClick)="vistaActual = 'tabla'"></p-button>
+            </div>
         </div>
         @if (authService.tienePermiso(PERMISOS.GROUPS_DETALLE_CREAR)) {
             <p-button label="Crear Ticket" icon="pi pi-plus" (onClick)="crearTicket()"></p-button>
         }
     </div>
 
-    <div class="flex gap-4 overflow-x-auto pb-3">
-        @for (estado of estados; track estado) {
-            
-            <div class="flex-1 min-w-15rem surface-section p-3 border-round border-1 surface-border"pDroppable="tickets" (onDrop)="drop(estado)">
+    @if (vistaActual === 'kanban') {
+        <div class="flex gap-4 overflow-x-auto pb-3">
+            @for (estado of estados; track estado) {
                 
-                <div class="flex justify-content-between align-items-center mb-3">
-                    <h3 class="m-0 text-lg font-semibold text-color">{{ estado }}</h3>
-                    <p-tag [value]="getTickets(estado).length.toString()" severity="info"></p-tag>
-                </div>
+                <div class="flex-1 min-w-15rem surface-section p-3 border-round border-1 surface-border"pDroppable="tickets" (onDrop)="drop(estado)">
+                    
+                    <div class="flex justify-content-between align-items-center mb-3">
+                        <h3 class="m-0 text-lg font-semibold text-color">{{ estado }}</h3>
+                        <p-tag [value]="getTickets(estado).length.toString()" severity="info"></p-tag>
+                    </div>
 
-                <div class="flex flex-column gap-3">
-                    @for (ticket of getTickets(estado); track ticket.id) {
-                        <div class="surface-card p-3 border-round shadow-1 border-1 surface-border transition-colors transition-duration-150 cursor-pointer"
-                            pDraggable="tickets" 
-                            (onDragStart)="dragStart(ticket)" 
-                            (onDragEnd)="dragEnd()"
-                            (click)="editarTicket(ticket)">
-                                                    
-                            <div class="flex justify-content-between align-items-start mb-2">
-                                <div class="font-medium text-color">{{ ticket.titulo }}</div>
-                                <div class="flex gap-1">
-                                    @if (authService.tienePermiso(PERMISOS.GROUPS_DETALLE_EDITAR)) {
-                                        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" size="small" (onClick)="editarTicket(ticket)"></p-button>
-                                    }
-                                    @if (authService.tienePermiso(PERMISOS.GROUPS_DETALLE_BAJA)) {
-                                        <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" size="small" (click)="$event.stopPropagation(); eliminarTicket(ticket)"></p-button>
-                                    }
+                    <div class="flex flex-column gap-3">
+                        @for (ticket of getTickets(estado); track ticket.id) {
+                            <div class="surface-card p-3 border-round shadow-1 border-1 surface-border transition-colors transition-duration-150 cursor-pointer"
+                                pDraggable="tickets" 
+                                (onDragStart)="dragStart(ticket)" 
+                                (onDragEnd)="dragEnd()"
+                                (click)="editarTicket(ticket)">
+                                                        
+                                <div class="flex justify-content-between align-items-start mb-2">
+                                    <div class="font-medium text-color">{{ ticket.titulo }}</div>
+                                    <div class="flex gap-1">
+                                        @if (authService.tienePermiso(PERMISOS.GROUPS_DETALLE_EDITAR)) {
+                                            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" size="small" (onClick)="editarTicket(ticket)"></p-button>
+                                        }
+                                        @if (authService.tienePermiso(PERMISOS.GROUPS_DETALLE_BAJA)) {
+                                            <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" size="small" (click)="$event.stopPropagation(); eliminarTicket(ticket)"></p-button>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="mb-2">
+                                    <p-tag [value]="ticket.prioridad" [severity]="getSeverity(ticket.prioridad)"></p-tag>
+                                </div>
+                                
+                                <div class="text-sm text-color-secondary flex flex-column gap-1">
+                                    <span class="flex align-items-center gap-2"><i class="pi pi-user text-xs"></i> {{ ticket.asignado }}</span>
+                                    <span class="flex align-items-center gap-2"><i class="pi pi-calendar text-xs"></i> Vence: {{ ticket.fechaLimite | date:'dd/MM/yyyy' }}</span>
                                 </div>
                             </div>
 
-                            <div class="mb-2">
-                                <p-tag [value]="ticket.prioridad" [severity]="getSeverity(ticket.prioridad)"></p-tag>
-                            </div>
-                            
-                            <div class="text-sm text-color-secondary flex flex-column gap-1">
-                                <span class="flex align-items-center gap-2"><i class="pi pi-user text-xs"></i> {{ ticket.asignado }}</span>
-                                <span class="flex align-items-center gap-2"><i class="pi pi-calendar text-xs"></i> Vence: {{ ticket.fechaLimite | date:'dd/MM/yyyy' }}</span>
-                            </div>
-                        </div>
+                        } @empty {
 
-                    } @empty {
-
-                        <p class="text-sm text-color-secondary text-center font-italic m-0 py-2">Sin tickets</p>
-                    }
+                            <p class="text-sm text-color-secondary text-center font-italic m-0 py-2">Sin tickets</p>
+                        }
+                    </div>
                 </div>
-            </div>
-        }
-    </div>
+            }
+        </div>
+    } @else { 
+        <div class="surface-card p-3 border-round shadow-1 border-1 surface-border">
+            <p-table #dt [value]="tickets" [paginator]="true" [rows]="10" 
+                     [globalFilterFields]="['titulo', 'asignado', 'estado', 'prioridad']"
+                     styleClass="p-datatable-sm" responsiveLayout="scroll">
+                
+                <ng-template pTemplate="caption">
+                    <div class="flex justify-content-end">
+                        <span class="p-input-icon-left">
+                            <i class="pi pi-search"></i>
+                            <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Buscar ticket..." />
+                        </span>
+                    </div>
+                </ng-template>
+
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th pSortableColumn="id">ID / Título <p-sortIcon field="id"></p-sortIcon></th>
+                        <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
+                        <th pSortableColumn="asignado">Asignado a <p-sortIcon field="asignado"></p-sortIcon></th>
+                        <th pSortableColumn="prioridad">Prioridad <p-sortIcon field="prioridad"></p-sortIcon></th>
+                        <th pSortableColumn="fechaLimite">Fecha Límite <p-sortIcon field="fechaLimite"></p-sortIcon></th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                    <tr>
+                        <th><p-columnFilter type="text" field="titulo" matchMode="contains" [showMenu]="false"></p-columnFilter></th>
+                        <th><p-columnFilter field="estado" matchMode="equals" [showMenu]="false">
+                            <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                                <select (ngModelChange)="filter($event)" class="w-full p-inputtext p-2" style="appearance: auto;">
+                                    <option value="">Todos</option>
+                                    @for (est of estados; track est) { <option [value]="est">{{ est }}</option> }
+                                </select>
+                            </ng-template>
+                        </p-columnFilter></th>
+                        <th><p-columnFilter type="text" field="asignado" matchMode="contains" [showMenu]="false"></p-columnFilter></th>
+                        <th><p-columnFilter field="prioridad" matchMode="equals" [showMenu]="false">
+                            <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                                <select (ngModelChange)="filter($event)" class="w-full p-inputtext p-2" style="appearance: auto;">
+                                    <option value="">Todas</option>
+                                    @for (prio of prioridades; track prio) { <option [value]="prio">{{ prio }}</option> }
+                                </select>
+                            </ng-template>
+                        </p-columnFilter></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-ticket>
+                    <tr>
+                        <td class="font-medium cursor-pointer text-primary" (click)="editarTicket(ticket)">#{{ ticket.id }} - {{ ticket.titulo }}</td>
+                        <td><p-tag [value]="ticket.estado" severity="info"></p-tag></td>
+                        <td>{{ ticket.asignado }}</td>
+                        <td><p-tag [value]="ticket.prioridad" [severity]="getSeverity(ticket.prioridad)"></p-tag></td>
+                        <td>{{ ticket.fechaLimite | date:'dd/MM/yyyy' }}</td>
+                        <td class="text-center">
+                            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" size="small" (onClick)="editarTicket(ticket)"></p-button>
+                            <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" size="small" (onClick)="eliminarTicket(ticket)"></p-button>
+                        </td>
+                    </tr>
+                </ng-template>
+                
+                <ng-template pTemplate="emptymessage">
+                    <tr><td colspan="6" class="text-center p-4">No se encontraron tickets.</td></tr>
+                </ng-template>
+            </p-table>
+        </div>
+    }
 </div>
 
 <p-dialog [(visible)]="modalVisible" [header]="modoEdicion ? 'Editar Ticket' : 'Nuevo Ticket'" [modal]="true" [style]="{ width: '400px' }" [draggable]="false">

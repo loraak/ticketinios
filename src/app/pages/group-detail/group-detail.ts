@@ -12,6 +12,7 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { AuthService, PERMISOS } from '../../services/auth.service';
 import { DragDropModule } from 'primeng/dragdrop'; 
+import { TableModule } from 'primeng/table';
 
 export interface Ticket { 
   id: number; 
@@ -27,7 +28,7 @@ export interface Ticket {
   selector: 'app-group-detail',
   standalone: true, 
   imports: [
-    CommonModule, ReactiveFormsModule, ButtonModule, TagModule, 
+    CommonModule, ReactiveFormsModule, ButtonModule, TagModule, TableModule,
     DialogModule, InputTextModule, DragDropModule,
     FloatLabelModule, ConfirmDialogModule, ToastModule
   ], 
@@ -43,6 +44,7 @@ export class GroupDetail {
   protected authService = inject(AuthService); 
   protected PERMISOS = PERMISOS; 
   ticketArrastrado: Ticket | null = null; 
+  vistaActual: 'kanban' | 'tabla' = 'kanban'; 
 
   dragStart(ticket: Ticket) {
     this.ticketArrastrado = ticket;

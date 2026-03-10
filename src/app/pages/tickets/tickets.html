@@ -4,7 +4,14 @@
 <div class="p-4 surface-ground min-h-screen">
     
     <div class="flex justify-content-between align-items-center mb-4">
+    <div class="flex align-items-center gap-3">
         <h1 class="m-0 text-2xl font-bold text-color">Tickets</h1>
+        
+        <div class="flex gap-1">
+            <p-button [outlined]="vistaActual !== 'kanban'" icon="pi pi-th-large" (onClick)="vistaActual = 'kanban'"></p-button>
+            <p-button [outlined]="vistaActual !== 'tabla'" icon="pi pi-list" (onClick)="vistaActual = 'tabla'"></p-button>
+        </div>
+    </div>
         @if (authService.tienePermiso(PERMISOS.TICKETS_AGREGAR)) {
             <p-button label="Crear Ticket" icon="pi pi-plus" (onClick)="crearTicket()"></p-button>
         }
@@ -21,20 +28,23 @@
 
                 <div class="flex flex-column gap-3">
                     @for (ticket of getTickets(estado); track ticket.id) {
-                        <div class="surface-card p-3 border-round shadow-1 border-1 surface-border cursor-pointer"
-                            pDraggable="tickets" (onDragStart)="dragStart(ticket)" (onDragEnd)="dragEnd()" (click)="editarTicket(ticket)">
+                        
+                        <div class="surface-card p-3 border-round shadow-1 border-1 surface-border"
+                            [class.cursor-pointer]="authService.tienePermiso(PERMISOS.TICKETS_DETALLE)"
+                            pDraggable="tickets" 
+                            [pDraggableDisabled]="!authService.tienePermiso(PERMISOS.TICKETS_DETALLE)"
+                            (onDragStart)="dragStart(ticket)" 
+                            (onDragEnd)="dragEnd()" 
+                            (click)="authService.tienePermiso(PERMISOS.TICKETS_DETALLE) ? editarTicket(ticket) : null">
                                                     
                             <div class="flex justify-content-between align-items-start mb-2">
                                 <div class="font-medium text-color">{{ ticket.titulo }}</div>
-                                @if (authService.tienePermiso(PERMISOS.TICKETS_ELIMINAR)) {
-                                    <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" size="small" (click)="$event.stopPropagation(); eliminarTicket(ticket)"></p-button>
-                                }
-                                @if (authService.tienePermiso(PERMISOS.TICKETS_EDITAR)) {
-                                    <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" severity="success" size="small" (click)="$event.stopPropagation(); eliminarTicket(ticket)"></p-button>
-                                }
-                                @if (authService.tienePermiso(PERMISOS.TICKETS_DETALLE)) {
-                                    <p-button icon="pi pi-eye" [text]="true" [rounded]="true" severity="secondary" size="small" (click)="$event.stopPropagation(); eliminarTicket(ticket)"></p-button>
-                                }
+                                
+                                <div class="flex gap-1">
+                                    @if (authService.tienePermiso(PERMISOS.TICKETS_ELIMINAR)) {
+                                        <p-button icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" size="small" (click)="$event.stopPropagation(); eliminarTicket(ticket)"></p-button>
+                                    }
+                                </div>
                             </div>
                             
                             <div class="text-sm text-color-secondary flex flex-column gap-1">

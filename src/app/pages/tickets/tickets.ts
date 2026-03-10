@@ -68,6 +68,7 @@ export class Tickets {
     modoEdicion = false; 
     modalVisible = false; 
     ticketSeleccionado: Ticket | null = null; 
+    vistaActual: 'kanban' | 'tabla' = 'kanban';
 
     estados = ['Pendiente', 'En Progreso', 'Bloqueado', 'Hecho']; 
     prioridades = ['Baja', 'Media', 'Alta', 'Crítica'];
@@ -210,6 +211,21 @@ export class Tickets {
         this.ticketSeleccionado = ticket;
         const fecha = new Date(ticket.fechaLimite).toISOString().split('T')[0];
         this.form.patchValue({ ...ticket, fechaLimite: fecha });
+
+        const nombreUsuario = this.authService.usuario()?.nombreCompleto;
+        const tienePermisoAdmin = this.authService.tienePermiso(this.PERMISOS.TICKETS_ADMIN);
+
+        if (tienePermisoAdmin || ticket.creador === nombreUsuario) {
+            this.form.enable();
+        } 
+        else if (ticket.asignado === nombreUsuario) {
+            this.form.disable();
+            this.form.get('estado')?.enable();
+        } 
+        else {
+            this.form.disable();
+        }
+
         this.modalVisible = true;
     }
 
@@ -221,14 +237,25 @@ export class Tickets {
     }
 
     eliminarTicket(ticket: Ticket) {
-        this.confirmationService.confirm({
-        message: `¿Eliminar "${ticket.titulo}"?`,
-        header: 'Confirmar', icon: 'pi pi-exclamation-triangle',
-        acceptButtonProps: { severity: 'danger' }, rejectButtonProps: { severity: 'secondary', text: true },
-        accept: () => {
-            this.ticketsTotales = this.ticketsTotales.filter(t => t.id !== ticket.id);
+        const nombreUsuario = this.authService.usuario()?.nombreCompleto;
+        const esAdmin = this.authService.tienePermiso(this.PERMISOS.TICKETS_ADMIN);
+
+        if (esAdmin || ticket.creador === nombreUsuario) {
+            this.confirmationService.confirm({
+                message: `¿Eliminar "${ticket.titulo}"?`,
+                header: 'Confirmar', 
+                icon: 'pi pi-exclamation-triangle',
+                acceptLabel: 'Sí, eliminar',
+                rejectLabel: 'Cancelar',
+                acceptButtonProps: { severity: 'danger' }, 
+                rejectButtonProps: { severity: 'secondary', text: true },
+                accept: () => {
+                    this.ticketsTotales = this.ticketsTotales.filter(t => t.id !== ticket.id);
+                }
+            });
+        } else {
+            this.messageService.add({ severity: 'error', summary: 'Acceso Denegado', detail: 'El ticket no es de tu pertenencia.' });
         }
-        });
     }
 
     crearTicket() {
