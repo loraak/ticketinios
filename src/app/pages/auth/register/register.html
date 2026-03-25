@@ -1,11 +1,11 @@
 <p-toast></p-toast>
 
-<div class="flex justify-content-center align-items-center py-5" style="min-height: 100vh; background: #f8f9fa;">
+<div class="flex justify-content-center align-items-center" style="min-height: 100vh; background: var(--surface-ground);">
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" style="width: 100%; max-width: 480px;">
         <p-card>
             <ng-template pTemplate="header">
                 <div class="text-center pt-4 pb-2 px-4">
-                    <h2 style="margin: 0.5rem 0 0.25rem; font-size: 1.5rem; font-weight: 700; color: #1e293b;">
+                    <h2 style="margin: 0.5rem 0 0.25rem; font-size: 1.5rem; font-weight: 700; color: var(--text-color);">
                         Registro de Usuario
                     </h2>
                     <p style="margin: 0; color: #94a3b8; font-size: 0.875rem;">
@@ -15,6 +15,16 @@
             </ng-template>
 
             <div class="px-3" style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+                <div>
+                    <p-floatlabel>
+                        <input id="usuario" type="text" pInputText formControlName="usuario" class="w-full">
+                        <label for="usuario">Nombre de Usuario</label>
+                    </p-floatlabel>
+                    @if (f['usuario'].touched && f['usuario'].errors?.['required']) {
+                        <small class="p-error block mt-1">El nombre de usuario es requerido.</small>
+                    }
+                </div>
 
                 <div>
                     <p-floatlabel>

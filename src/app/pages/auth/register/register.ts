@@ -9,6 +9,8 @@ import {
   ValidatorFn,
   Validators
 } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { Router, RouterModule } from '@angular/router';
 import { MessageService } from 'primeng/api';
 
 import { CardModule } from 'primeng/card';
@@ -93,6 +95,7 @@ export function adultAgeValidator(): ValidatorFn {
     ToastModule,
     KeyFilterModule,
     InputMaskModule,
+    RouterModule,
   ],
   providers: [MessageService]
 })
@@ -101,7 +104,9 @@ export class Register implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private http: HttpClient,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -127,20 +132,35 @@ export class Register implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.registerForm.valid) {
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Éxito',
-        detail: 'Registro completado con éxito.'
-      });
-      console.log('Datos del formulario:', this.registerForm.value);
-    } else {
+    if (this.registerForm.invalid) {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
         detail: 'Por favor, corrija los errores en el formulario.'
       });
       this.registerForm.markAllAsTouched();
+      return;
     }
+
+    // Excluimos confirmPassword que no se necesita en el backend
+    const { confirmPassword, ...payload } = this.registerForm.getRawValue();
+
+    this.http.post('http://localhost:8081/api/auth/register', payload).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Registro Exitoso',
+          detail: 'Usuario registrado correctamente. Serás redirigido al login.'
+        });
+        setTimeout(() => this.router.navigate(['/login']), 2000);
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error en el Registro',
+          detail: err.error?.message || 'Ocurrió un error inesperado. Por favor, inténtelo de nuevo.'
+        });
+      }
+    });
   }
 }
