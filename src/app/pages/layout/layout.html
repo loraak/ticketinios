@@ -10,25 +10,23 @@
         </div>
 
         <nav class="flex flex-column gap-2">
-            <a routerLink="/app/home" routerLinkActive="font-bold text-primary" [routerLinkActiveOptions]="{exact: true}"
+            <a *ifHasPermission="['grupos:ver_menu']"routerLink="/app/home" routerLinkActive="font-bold text-primary" [routerLinkActiveOptions]="{exact: true}"
                 class="flex align-items-center gap-3 p-3 border-round text-color no-underline cursor-pointer transition-colors transition-duration-150">
                 <i class="pi pi-home"></i> Inicio
             </a>
-            <a routerLink="/app/perfil" routerLinkActive="font-bold text-primary"
+            <a *ifHasPermission="['perfil:ver_menu']"routerLinkActive="font-bold text-primary"
                 class="flex align-items-center gap-3 p-3 border-round text-color no-underline cursor-pointer transition-colors transition-duration-150">
                 <i class="pi pi-user"></i> Perfil
             </a>
-            
-            <a *ifHasPermission="['usuarios:ver']" routerLink="/app/usuarios" routerLinkActive="font-bold text-primary"
+            <a *ifHasPermission="['gestionarGrupos:ver_menu']" routerLink="/app/usuarios" routerLinkActive="font-bold text-primary"
                 class="flex align-items-center gap-3 p-3 border-round text-color no-underline cursor-pointer transition-colors transition-duration-150">
                 <i class="pi pi-users"></i> Gestión de grupos
             </a>
-            <a *ifHasPermission="['usuario:ver']" routerLink="/app/superadmin" routerLinkActive="font-bold text-primary"
+            <a *ifHasPermission="['usuarios:ver_menu']" routerLink="/app/superadmin" routerLinkActive="font-bold text-primary"
                 class="flex align-items-center gap-3 p-3 border-round text-color no-underline cursor-pointer transition-colors transition-duration-150">
                 <i class="pi pi-ticket"></i> Usuarios
             </a>
         </nav>
-
         <div class="mt-auto">
             <p class="text-center text-xs text-color-secondary mb-2 m-0">v1.0.0</p>
             <a (click)="logout()"
