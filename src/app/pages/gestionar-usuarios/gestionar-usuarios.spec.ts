@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Crud } from './crud';
+import { Superadmin } from './gestionar-usuarios';
 
-describe('Crud', () => {
-  let component: Crud;
-  let fixture: ComponentFixture<Crud>;
+describe('Superadmin', () => {
+  let component: Superadmin;
+  let fixture: ComponentFixture<Superadmin>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Crud]
+      imports: [Superadmin]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(Crud);
+    fixture = TestBed.createComponent(Superadmin);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

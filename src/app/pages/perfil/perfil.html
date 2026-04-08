@@ -17,12 +17,14 @@
                 </div>
             </div>
             <div class="flex gap-2">
-                <p-button *ifHasPermission="['perfil:editar']" icon="pi pi-pencil" [rounded]="true" [text]="true"
+                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true"
+                    *ifHasPermission="['perfil:editar']"
                     pTooltip="Editar perfil"
                     (onClick)="abrirEditar()"
                     [disabled]="!usuario.activo">
                 </p-button>
-                <p-button *ifHasPermission="['perfil:baja']" icon="pi pi-ban" [rounded]="true" [text]="true"
+                <p-button icon="pi pi-ban" [rounded]="true" [text]="true"
+                    *ifHasPermission="['perfil:eliminar']"
                     severity="danger" pTooltip="Dar de baja"
                     (onClick)="confirmarBaja()"
                     [disabled]="!usuario.activo">
@@ -31,14 +33,14 @@
         </div>
     </p-card>
 
-    <p-card header="Información Personal" styleClass="mb-4">
+    <p-card header="Información Personal">
         <div class="flex flex-column gap-3">
 
             <div class="flex align-items-center gap-3">
                 <p-avatar icon="pi pi-user" shape="square" styleClass="surface-ground text-primary"></p-avatar>
                 <div>
                     <p class="text-xs text-color-secondary m-0">Usuario</p>
-                    <p class="font-medium text-color m-0">{{ authService.usuario()?.nombreCompleto }}</p>
+                    <p class="font-medium text-color m-0 mt-1">{{ authService.usuario()?.nombreCompleto }}</p>
                 </div>
             </div>
             <p-divider styleClass="my-0"></p-divider>
@@ -47,7 +49,7 @@
                 <p-avatar icon="pi pi-envelope" shape="square" styleClass="surface-ground text-primary"></p-avatar>
                 <div>
                     <p class="text-xs text-color-secondary m-0">Email</p>
-                    <p class="font-medium text-color m-0">{{ authService.usuario()?.email }}</p>
+                    <p class="font-medium text-color m-0 mt-1">{{ authService.usuario()?.email }}</p>
                 </div>
             </div>
             <p-divider styleClass="my-0"></p-divider>
@@ -56,7 +58,7 @@
                 <p-avatar icon="pi pi-map-marker" shape="square" styleClass="surface-ground text-primary"></p-avatar>
                 <div>
                     <p class="text-xs text-color-secondary m-0">Dirección</p>
-                    <p class="font-medium text-color m-0">{{ usuario.direccion }}</p>
+                    <p class="font-medium text-color m-0 mt-1">{{ authService.usuario()?.direccion }}</p>
                 </div>
             </div>
             <p-divider styleClass="my-0"></p-divider>
@@ -65,7 +67,7 @@
                 <p-avatar icon="pi pi-calendar" shape="square" styleClass="surface-ground text-primary"></p-avatar>
                 <div>
                     <p class="text-xs text-color-secondary m-0">Fecha de Nacimiento</p>
-                    <p class="font-medium text-color m-0">{{ usuario.fechaNacimiento }}</p>
+                    <p class="font-medium text-color m-0 mt-1">{{ authService.usuario()?.fechaNacimiento }}</p>
                 </div>
             </div>
             <p-divider styleClass="my-0"></p-divider>
@@ -74,106 +76,13 @@
                 <p-avatar icon="pi pi-phone" shape="square" styleClass="surface-ground text-primary"></p-avatar>
                 <div>
                     <p class="text-xs text-color-secondary m-0">Teléfono</p>
-                    <p class="font-medium text-color m-0">{{ usuario.telefono }}</p>
+                    <p class="font-medium text-color m-0 mt-1">{{ authService.usuario()?.telefono }}</p>
                 </div>
             </div>
 
         </div>
     </p-card>
-
-    <p-card header="Carga de Trabajo" styleClass="mb-4">
-        <div class="grid">
-            <div class="col-6 md:col-3 text-center">
-                <p class="text-3xl font-bold text-color m-0">{{ resumen.total }}</p>
-                <p class="text-xs text-color-secondary m-0 mt-1">Total</p>
-            </div>
-            <div class="col-6 md:col-3 text-center">
-                <p class="text-3xl font-bold m-0" style="color: #3b82f6;">{{ resumen.pendiente }}</p>
-                <p class="text-xs text-color-secondary m-0 mt-1">Pendiente</p>
-            </div>
-            <div class="col-6 md:col-3 text-center">
-                <p class="text-3xl font-bold m-0" style="color: #f59e0b;">{{ resumen.enProgreso }}</p>
-                <p class="text-xs text-color-secondary m-0 mt-1">En Progreso</p>
-            </div>
-            <div class="col-6 md:col-3 text-center">
-                <p class="text-3xl font-bold m-0" style="color: #ef4444;">{{ resumen.bloqueado }}</p>
-                <p class="text-xs text-color-secondary m-0 mt-1">Bloqueado</p>
-            </div>
-        </div>
-
-        <p-divider></p-divider>
-
-        <div style="height: 8px; border-radius: 4px; background: #e2e8f0; overflow: hidden;">
-            <div style="height: 100%; display: flex;">
-                    <div [style.width.%]="(resumen.hecho / resumen.total) * 100"
-                        style="background: #22c55e; transition: width 0.3s;">
-                    </div>
-                    <div [style.width.%]="(resumen.enProgreso / resumen.total) * 100"
-                        style="background: #f59e0b; transition: width 0.3s;">
-                    </div>
-                    <div [style.width.%]="(resumen.bloqueado / resumen.total) * 100"
-                        style="background: #ef4444; transition: width 0.3s;">
-                    </div>
-            </div>
-        </div>
-        <div class="flex gap-3 mt-2">
-            <small class="flex align-items-center gap-1">
-                <span style="width:8px; height:8px; border-radius:50%; background:#22c55e; display:inline-block;"></span>
-                Hecho ({{ resumen.hecho }})
-            </small>
-            <small class="flex align-items-center gap-1">
-                <span style="width:8px; height:8px; border-radius:50%; background:#f59e0b; display:inline-block;"></span>
-                En progreso ({{ resumen.enProgreso }})
-            </small>
-            <small class="flex align-items-center gap-1">
-                <span style="width:8px; height:8px; border-radius:50%; background:#ef4444; display:inline-block;"></span>
-                Bloqueado ({{ resumen.bloqueado }})
-            </small>
-        </div>
-    </p-card>
-
-    <p-card header="Mis Tickets">
-        <p-table
-            [value]="ticketsAsignados"
-            [paginator]="true"
-            [rows]="5"
-            styleClass="p-datatable-sm p-datatable-gridlines">
-            <ng-template pTemplate="header">
-                <tr>
-                    <th>Título</th>
-                    <th>Estado</th>
-                    <th>Prioridad</th>
-                    <th>Grupo</th>
-                    <th>Fecha Límite</th>
-                </tr>
-            </ng-template>
-
-            <ng-template pTemplate="body" let-ticket>
-                <tr>
-                    <td class="font-medium">#{{ ticket.id }} - {{ ticket.titulo }}</td>
-                    <td>
-                        <p-tag [value]="ticket.estado" [severity]="severidadEstado(ticket.estado)"></p-tag>
-                    </td>
-                    <td>
-                        <p-tag [value]="ticket.prioridad" [severity]="severidadPrioridad(ticket.prioridad)"></p-tag>
-                    </td>
-                    <td>{{ ticket.grupo }}</td>
-                    <td>{{ ticket.fechaLimite | date:'dd/MM/yyyy' }}</td>
-                </tr>
-            </ng-template>
-
-            <ng-template pTemplate="emptymessage">
-                <tr>
-                    <td colspan="5" class="text-center p-4 text-color-secondary">
-                        No tenés tickets asignados.
-                    </td>
-                </tr>
-            </ng-template>
-        </p-table>
-    </p-card>
-
-</div>
-
+    
 <p-dialog
     [(visible)]="modalVisible"
     header="Editar Perfil"

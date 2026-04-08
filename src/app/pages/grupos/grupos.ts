@@ -31,7 +31,7 @@ interface Group {
 }
 
 @Component({
-    selector: 'app-groups',
+    selector: 'app-grupos',
     standalone: true,
     imports: [
         CommonModule, FormsModule, ReactiveFormsModule,
@@ -42,10 +42,10 @@ interface Group {
         HasPermissionDirective
     ],
     providers: [MessageService, ConfirmationService],
-    templateUrl: './crud.html',
-    styleUrl: './crud.css'
+    templateUrl: './grupos.html',
+    styleUrl: './grupos.css'
 })
-export class Groups {
+export class Grupos {
     protected authService = inject(AuthService);
     protected permissionsSvc = inject(PermissionsService); 
     protected router = inject(Router); 
@@ -60,7 +60,7 @@ export class Groups {
     ];
 
     get gruposVisibles() {
-        if (this.permissionsSvc.hasPermission('groups:admin')) {
+        if (this.permissionsSvc.hasPermission('Grupos:admin')) {
             return this.grupos;
         }
         

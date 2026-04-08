@@ -10,13 +10,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/layout/layout').then(m => m.Layout),
         canActivate: [authGuard],
         children: [
-            { path: '',       redirectTo: 'home', pathMatch: 'full' }, 
-            { path: 'perfil', loadComponent: () => import('./pages/perfil/perfil').then(m => m.Perfil) },
-            { path: 'home',   loadComponent: () => import('./pages/crud/crud').then(m => m.Groups) },
-            { path: 'usuarios',   canActivate: [permisoGuard('usuarios:ver')],   loadComponent: () => import('./pages/crud-usuarios/crud-usuarios').then(m => m.Usuarios) },
-            { path: 'tickets', canActivate: [permisoGuard('tickets:ver')],  loadComponent: () => import('./pages/tickets/tickets').then(m => m.Tickets) },
-            { path: 'groupDetails',   canActivate: [permisoGuard('groups:verespecifico')],   loadComponent: () => import('./pages/group-detail/group-detail').then(m => m.GroupDetail) },
-            { path: 'superadmin', canActivate: [permisoGuard('usuario:ver')], loadComponent: () => import('./pages/superadmin/superadmin').then(m => m.Superadmin)},
+            { path: '', redirectTo: 'home', pathMatch: 'full' }, 
+            { path: 'home',   canActivate: [permisoGuard('grupos:ver')],loadComponent: () => import('./pages/grupos/grupos').then(m => m.Grupos) },
+            { path: 'perfil', canActivate: [permisoGuard('perfil:ver')], loadComponent: () => import('./pages/perfil/perfil').then(m => m.Perfil) },
+            { path: 'gestionarGrupos', canActivate: [permisoGuard('gestionarGrupos:ver')],loadComponent: () => import('./pages/gestionar-grupos/gestionar-grupos').then(m => m.GestionarGrupos) },
+            { path: 'groupDetails',   canActivate: [permisoGuard('grupos:verespecifico')],   loadComponent: () => import('./pages/group-detail/group-detail').then(m => m.GroupDetail) },
+            { path: 'superadmin', canActivate: [permisoGuard('usuarios:ver')], loadComponent: () => import('./pages/gestionar-usuarios/gestionar-usuarios').then(m => m.GestionarUsuarios)},
         ]
     },
     { path: '**', redirectTo: 'landing' } 
