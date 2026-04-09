@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router'; 
@@ -20,6 +20,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { AuthService } from '../../services/auth.service';
 import { PermissionsService } from '../../services/permissions.service'; 
 import { HasPermissionDirective } from '../../directives/has-permission.directive'; 
+import { HttpClient } from '@angular/common/http';
 
 interface Group {
     id: number;
@@ -45,27 +46,31 @@ interface Group {
     templateUrl: './grupos.html',
     styleUrl: './grupos.css'
 })
-export class Grupos {
+
+export class Grupos implements OnInit {
     protected authService = inject(AuthService);
     protected permissionsSvc = inject(PermissionsService); 
     protected router = inject(Router); 
+    private http = inject(HttpClient);
+    private messageService = inject(MessageService);
+    private confirmationService = inject(ConfirmationService);
 
-    grupos: Group[] = [
-        { id: 1, autor: 'Jonathan Joestar', nombre: 'Phantom Blood', integrantes: 3, tickets: 5,  activo: true },
-        { id: 2, autor: 'Giorno Giovanna', nombre: 'Golden Experience', integrantes: 7, tickets: 5, activo: true },
-        { id: 3, autor: 'Giorno Giovanna', nombre: 'El Padrino', integrantes: 2, tickets: 1, activo: false },
-        { id: 4, autor: 'Giorno Giovanna', nombre: 'Réquiem', integrantes: 2, tickets: 2, activo: true },
-        { id: 5, autor: 'Jotaro Joestar', nombre: 'Star Dust', integrantes: 5, tickets: 3, activo: false },
-        { id: 6, autor: 'Jolyne Joestar', nombre: 'Stone Ocean', integrantes: 6, tickets: 4, activo: true },
-    ];
+    grupos: Group[] = [];
+    loading = false; 
 
-    get gruposVisibles() {
-        if (this.permissionsSvc.hasPermission('Grupos:admin')) {
-            return this.grupos;
-        }
-        
-        const nombreUsuario = (this.authService.usuario() as any)?.nombreCompleto;
-        return this.grupos.filter(g => g.autor === nombreUsuario);
+    ngOnInit() {
+        this.cargarGrupos();
+    }
+
+    cargarGrupos() { 
+        this.loading = true;
+        this.http.get<any>('http://localhost:3000/api/grupos').subscribe({
+            next: (res) => {
+                this.grupos = res.data;
+                this.loading = false;
+            },
+            error: () => this.loading = false
+        });
     }
 
     modalVisible = false;
@@ -75,8 +80,6 @@ export class Grupos {
 
     constructor(
         private fb: FormBuilder,
-        private messageService: MessageService,
-        private confirmationService: ConfirmationService
     ) {
         this.form = this.fb.group({
             autor:       ['', Validators.required],
