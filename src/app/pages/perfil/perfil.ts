@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-
+import { HttpClient } from '@angular/common/http';
 import { AvatarModule } from 'primeng/avatar';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
@@ -48,7 +48,7 @@ interface TicketResumen {
 })
 export class Perfil {
     protected authService = inject(AuthService);
-
+    loading = false; 
     modalVisible = false;
 
     usuario = {
@@ -65,6 +65,7 @@ export class Perfil {
 
     constructor(
         private fb: FormBuilder,
+        private http: HttpClient, 
         private messageService: MessageService,
         private confirmationService: ConfirmationService
     ) {
@@ -108,9 +109,24 @@ export class Perfil {
             this.form.markAllAsTouched();
             return;
         }
-        this.usuario = { ...this.usuario, ...this.form.value };
-        this.modalVisible = false;
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Perfil actualizado.' });
+        this.http.post('http://localhost:3000/api/auth/register').subscribe({
+            next: () => {
+                this.loading = false;
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Registro Exitoso',
+                    detail: 'Usuario registrado correctamente. Serás redirigido al login.'
+                });
+            },
+            error: (err) => {
+                this.loading = false;
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error en el Registro',
+                    detail: err.error?.data?.[0]?.message || 'Ocurrió un error inesperado.'
+                });
+            }
+        });
     }
 
     confirmarBaja() {
