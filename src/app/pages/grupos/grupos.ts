@@ -157,10 +157,10 @@ export class Grupos implements OnInit {
         }
     }
 
-    ingresarGrupo() { 
-        this.router.navigate(['/app/groupDetails']); 
+    ingresarGrupo(grupoId: string) { 
+        this.router.navigate(['/app/groupDetails', grupoId]); 
     }
-
+    
     confirmarBaja(grupo: Group) {
         this.confirmationService.confirm({
             message: `¿Dar de baja al grupo "${grupo.nombre}"?`,

@@ -14,7 +14,7 @@ export const routes: Routes = [
             { path: 'home',   canActivate: [permisoGuard('grupos:ver')],loadComponent: () => import('./pages/grupos/grupos').then(m => m.Grupos) },
             { path: 'perfil', canActivate: [permisoGuard('perfil:ver')], loadComponent: () => import('./pages/perfil/perfil').then(m => m.Perfil) },
             { path: 'gestionarGrupos', canActivate: [permisoGuard('gestionarGrupos:ver')],loadComponent: () => import('./pages/gestionar-grupos/gestionar-grupos').then(m => m.GestionarGrupos) },
-            { path: 'groupDetails',   canActivate: [permisoGuard('grupos:verespecifico')],   loadComponent: () => import('./pages/group-detail/group-detail').then(m => m.GroupDetail) },
+            { path: 'groupDetails/:id',   canActivate: [permisoGuard('grupos:ver_especifico')],   loadComponent: () => import('./pages/group-detail/group-detail').then(m => m.GroupDetail) },
             { path: 'superadmin', canActivate: [permisoGuard('usuarios:ver')], loadComponent: () => import('./pages/gestionar-usuarios/gestionar-usuarios').then(m => m.GestionarUsuarios)},
         ]
     },

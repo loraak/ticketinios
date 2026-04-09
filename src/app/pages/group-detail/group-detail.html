@@ -2,6 +2,33 @@
 <p-confirmDialog></p-confirmDialog>
 
 <div class="p-4 surface-ground min-h-screen">
+    <div class="surface-card p-4 border-round shadow-1 border-1 surface-border mb-5">
+        <div class="flex justify-content-between align-items-start">
+            <div>
+                <h1 class="m-0 text-2xl font-bold text-color">{{ grupo.nombre }}</h1>
+                <p class="mt-2 mb-0 text-color-secondary">{{ grupo.descripcion }}</p>
+            </div>
+            <p-tag 
+                [value]="grupo.activo ? 'Activo' : 'Inactivo'" 
+                [severity]="grupo.activo ? 'success' : 'danger'">
+            </p-tag>
+        </div>
+        <div class="flex gap-4 mt-3 pt-3 border-top-1 surface-border">
+            <div class="flex align-items-center gap-2 text-sm text-color-secondary">
+                <i class="pi pi-user"></i>
+                <span>Creado por <strong class="text-color">{{ grupo.creador }}</strong></span>
+            </div>
+            <div class="flex align-items-center gap-2 text-sm text-color-secondary">
+                <i class="pi pi-calendar"></i>
+                <span>{{ formatearFecha(grupo.creado_en) | date:'dd/MM/yyyy' }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="surface-card p-4 border-round shadow-1 border-1 surface-border mb-5" *ngIf="!grupo">
+        <p-skeleton height="2rem" class="mb-2"></p-skeleton>
+        <p-skeleton height="1rem" width="60%"></p-skeleton>
+    </div>
     
     <div class="mb-5">
         <div *ifHasPermission="['groups:mistickets']">

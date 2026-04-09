@@ -11,11 +11,15 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { DragDropModule } from 'primeng/dragdrop'; 
 import { TableModule } from 'primeng/table';
+import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { HttpClient } from '@angular/common/http';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 import { PermissionsService } from '../../services/permissions.service';
 import { HasPermissionDirective } from '../../directives/has-permission.directive';
+import { OnInit } from '../../../../node_modules/@angular/core/types/core';
 export interface Comentario { autor: string; texto: string; fecha: Date; }
 export interface Historial { accion: string; fecha: Date; }
 
@@ -40,25 +44,54 @@ export interface Ticket {
     CommonModule, ReactiveFormsModule, ButtonModule, TagModule, TableModule,
     DialogModule, InputTextModule, DragDropModule,
     FloatLabelModule, ConfirmDialogModule, ToastModule,
-    HasPermissionDirective 
+    HasPermissionDirective, SkeletonModule
   ], 
   providers: [ConfirmationService, MessageService],
   templateUrl: './group-detail.html',
   styleUrl: './group-detail.css',
 })
 
-export class GroupDetail {
+export class GroupDetail implements OnInit{
   private fb = inject(FormBuilder);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
-  protected authService = inject(AuthService); 
-  protected permissionsSvc = inject(PermissionsService); 
+  private route = inject(ActivatedRoute);
+  private http = inject(HttpClient);
+  protected authService = inject(AuthService);
+  protected permissionsSvc = inject(PermissionsService);
+  grupo: any = null;
   
   ticketArrastrado: Ticket | null = null; 
   vistaActual: 'kanban' | 'tabla' = 'kanban'; 
   ticketSeleccinoado?: Ticket | null = null; 
 
-  //  Función para ver sí es creador del ticket. 
+  ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.cargarGrupo(id);
+    }
+  }
+
+  private cargarGrupo(id: string): void {
+    this.http.get(`http://localhost:3000/api/grupos/${id}`).subscribe({
+      next: (res: any) => {
+        this.grupo = res.data[0];
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'No se pudo cargar el grupo.'
+        });
+      }
+    });
+  }
+
+  formatearFecha(fecha: string): Date | null {
+    if (!fecha) return null;
+    return new Date(fecha + 'Z');
+  }
+
   esCreador(ticket: Ticket): boolean {
     const usuarioActual = (this.authService.usuario() as any)?.nombreCompleto;
     return ticket.creador === usuarioActual;
