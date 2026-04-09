@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -20,16 +20,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 
 import { AuthService } from '../../services/auth.service';
 import { HasPermissionDirective } from '../../directives/has-permission.directive'; 
-
-interface TicketResumen {
-    id: number;
-    titulo: string;
-    estado: string;
-    prioridad: string;
-    grupo: string;
-    descripcion?: string; 
-    fechaLimite: Date;
-}
+import { HttpClient } from '@angular/common/http';
 
 @Component({
     selector: 'app-perfil',
@@ -50,23 +41,25 @@ export class Perfil {
     protected authService = inject(AuthService);
 
     modalVisible = false;
+    loading = false;
 
-    usuario = {
+    usuario = computed(() => ({
         nombreCompleto: this.authService.usuario()?.nombreCompleto,
-        usuario: this.authService.usuario()?.username,
-        email: this.authService.usuario()?.email,
-        direccion: this.authService.usuario()?.direccion,
-        fechaNacimiento: this.authService.usuario()?.fechaNacimiento,
-        telefono: this.authService.usuario()?.telefono,
-        activo: this.authService.usuario()?.activo
-    };
+        usuario:        this.authService.usuario()?.username,
+        email:          this.authService.usuario()?.email,
+        direccion:      this.authService.usuario()?.direccion,
+        fechaNacimiento:this.authService.usuario()?.fechaNacimiento,
+        telefono:       this.authService.usuario()?.telefono,
+        activo:         this.authService.usuario()?.activo
+    }));
 
     form: FormGroup;
 
     constructor(
         private fb: FormBuilder,
         private messageService: MessageService,
-        private confirmationService: ConfirmationService
+        private confirmationService: ConfirmationService,
+        private http: HttpClient
     ) {
         this.form = this.fb.group({
             nombreCompleto:  ['', Validators.required],
@@ -99,7 +92,7 @@ export class Perfil {
     }
 
     abrirEditar() {
-        this.form.patchValue(this.usuario);
+        this.form.patchValue(this.usuario());
         this.modalVisible = true;
     }
 
@@ -108,9 +101,38 @@ export class Perfil {
             this.form.markAllAsTouched();
             return;
         }
-        this.usuario = { ...this.usuario, ...this.form.value };
-        this.modalVisible = false;
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Perfil actualizado.' });
+
+        const id = this.authService.usuario()?.id; 
+        if (!id) return;
+
+        this.loading = true;
+
+        const formValue = { ...this.form.value };
+        if (formValue.fechaNacimiento) {
+            const [year, month, day] = formValue.fechaNacimiento.split('-');
+            formValue.fechaNacimiento = `${day}/${month}/${year}`;
+        }
+
+        this.http.put(`http://localhost:3000/api/auth/update/${id}`, formValue).subscribe({
+            next: () => {
+                this.loading = false;
+                this.modalVisible = false; 
+                this.authService.actualizarUsuario(this.form.value);
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Perfil Actualizado',
+                    detail: 'Tus datos fueron actualizados correctamente.'
+                });
+            },
+            error: (err) => {
+                this.loading = false;
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error al Actualizar',
+                    detail: err.error?.data?.[0]?.message || 'Ocurrió un error inesperado.'
+                });
+            }
+        });
     }
 
     confirmarBaja() {
@@ -123,8 +145,26 @@ export class Perfil {
             acceptButtonProps: { severity: 'danger' },
             rejectButtonProps: { severity: 'secondary', text: true },
             accept: () => {
-                this.usuario.activo = false;
-                this.messageService.add({ severity: 'warn', summary: 'Baja', detail: 'Tu perfil ha sido dado de baja.' });
+                const id = this.authService.usuario()?.id;
+                if (!id) return;
+
+                this.http.patch(`http://localhost:3000/api/auth/baja/${id}`, {}).subscribe({
+                    next: () => {
+                        this.messageService.add({
+                            severity: 'warn',
+                            summary: 'Baja',
+                            detail: 'Tu perfil ha sido dado de baja.'
+                        });
+                        setTimeout(() => this.authService.logout(), 1500); 
+                    },
+                    error: (err) => {
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Error',
+                            detail: err.error?.data?.[0]?.message || 'Ocurrió un error inesperado.'
+                        });
+                    }
+                });
             }
         });
     }
