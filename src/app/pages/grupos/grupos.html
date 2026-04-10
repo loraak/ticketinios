@@ -82,7 +82,15 @@
                             (onClick)="abrirModalEditar(grupo)"
                             [disabled]="!grupo.activo">
                         </p-button>
-                        <p-button *ifHasPermission="['grupos:eliminar']" icon="pi pi-ban" [rounded]="true" [text]="true" severity="danger" pTooltip="Dar de baja" (onClick)="confirmarBaja(grupo)" [disabled]="!grupo.activo"></p-button>
+                        <p-button 
+                        *ifHasPermission="{ permisos: ['grupos:eliminar'], grupoId: grupo.id }" 
+                        [icon]="grupo.activo ? 'pi pi-ban' : 'pi pi-check-circle'" 
+                        [rounded]="true" 
+                        [text]="true" 
+                        [severity]="grupo.activo ? 'danger' : 'success'" 
+                        [pTooltip]="grupo.activo ? 'Dar de baja' : 'Dar de alta'" 
+                        (onClick)="confirmarBaja(grupo)">
+                    </p-button>
                     </div>
                 </td>
             </tr>

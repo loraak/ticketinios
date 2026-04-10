@@ -16,7 +16,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { DividerModule } from 'primeng/divider';
 import { MessageService, ConfirmationService } from 'primeng/api';
-
+import { TooltipModule } from 'primeng/tooltip';
 import { AuthService } from '../../services/auth.service';
 import { PermissionsService } from '../../services/permissions.service'; 
 import { HasPermissionDirective } from '../../directives/has-permission.directive'; 
@@ -41,7 +41,7 @@ interface Group {
         InputTextModule, InputNumberModule, TextareaModule,
         TagModule, ToastModule, ConfirmDialogModule,
         FloatLabelModule, DividerModule, ChartModule,
-        HasPermissionDirective
+        HasPermissionDirective, TooltipModule
     ],
     providers: [MessageService, ConfirmationService],
     templateUrl: './grupos.html',
@@ -118,7 +118,7 @@ export class Grupos implements OnInit {
                     }]
                 };
 
-                this.cdr.detectChanges(); // <-- agrega esto al final
+                this.cdr.detectChanges(); 
             },
             error: () => {
                 this.messageService.add({
@@ -234,19 +234,39 @@ export class Grupos implements OnInit {
     }
     
     confirmarBaja(grupo: Group) {
+        const accion = grupo.activo ? 'dar de baja' : 'dar de alta';
+        const severidad = grupo.activo ? 'danger' : 'success';
+    
         this.confirmationService.confirm({
-            message: `¿Dar de baja al grupo "${grupo.nombre}"?`,
-            header: 'Confirmar Baja',
+            message: `¿Estás seguro de ${accion} al grupo "${grupo.nombre}"?`,
+            header: 'Confirmar cambio de estado',
             icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Sí, dar de baja',
+            acceptLabel: 'Sí, confirmar',
             rejectLabel: 'Cancelar',
-            acceptButtonProps: { severity: 'danger' },
+            acceptButtonProps: { severity: severidad },
             rejectButtonProps: { severity: 'secondary', text: true },
             accept: () => {
-                const idx = this.grupos.findIndex(g => g.id === grupo.id);
-                this.grupos[idx] = { ...this.grupos[idx], activo: false };
-                this.grupos = [...this.grupos];
-                this.messageService.add({ severity: 'warn', summary: 'Baja', detail: `Grupo "${grupo.nombre}" dado de baja.` });
+                this.http.patch<any>(`http://localhost:3000/api/grupos/estado/${grupo.id}`, {})
+                    .subscribe({
+                        next: (res) => {
+                            const idx = this.grupos.findIndex(g => g.id === grupo.id);
+                            this.grupos[idx] = { ...this.grupos[idx], activo: !this.grupos[idx].activo };
+                            this.grupos = [...this.grupos];
+    
+                            this.messageService.add({ 
+                                severity: 'success', 
+                                summary: 'Éxito', 
+                                detail: res.data?.[0]?.message || 'Estado actualizado.' 
+                            });
+                        },
+                        error: (err) => {
+                            this.messageService.add({
+                                severity: 'error',
+                                summary: 'Error',
+                                detail: err.error?.data?.[0]?.message || 'Error inesperado.'
+                            });
+                        }
+                    });
             }
         });
     }

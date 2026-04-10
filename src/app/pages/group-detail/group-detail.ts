@@ -68,14 +68,27 @@ export class GroupDetail implements OnInit{
   ticketSeleccinoado?: Ticket | null = null; 
   cargandoGrupo = true;
   tickets: Ticket[] = [];
-  cargandoTickets = false; 
+  cargandoTickets = false;
+  miembros: { usuarioId: string, nombreCompleto: string }[] = [];
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.cargarGrupo(id);
       this.cargarTickets(id); 
+      this.cargarMiembros(id); 
     }
+  }
+
+  private cargarMiembros(grupoId: string): void {
+    this.http.get<any>(`http://localhost:3000/api/grupos/${grupoId}/miembros`).subscribe({
+        next: (res) => this.miembros = res.data,
+        error: () => this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudieron cargar los miembros.'
+        })
+    });
   }
 
   private cargarTickets(grupoId: string): void { 
@@ -129,6 +142,11 @@ export class GroupDetail implements OnInit{
     return ticket.autorId === usuarioActual;
   }
 
+  esAsignado(ticket: Ticket): boolean {
+    const usuarioActual = (this.authService.usuario() as any)?.id;
+    return ticket.asignadoId === usuarioActual;
+  }
+
   dragStart(ticket: Ticket) {
     this.ticketArrastrado = ticket;
   }
@@ -144,11 +162,11 @@ drop(estadoDestino: string) {
     return;
   }
 
-  if (!this.esCreador(this.ticketArrastrado)) {
+  if (!this.esCreador(this.ticketArrastrado) && !this.esAsignado (this.ticketArrastrado) ) {
     this.messageService.add({
       severity: 'warn',
       summary: 'Sin permiso',
-      detail: 'Solo el creador puede cambiar el estado del ticket.'
+      detail: 'Solo el creador o persona asignada puede cambiar el estado del ticket.'
     });
     this.ticketArrastrado = null;
     return;
@@ -185,10 +203,11 @@ drop(estadoDestino: string) {
 
   form: FormGroup = this.fb.group({
     titulo: ['', Validators.required],
+    descripcion: [''], 
     asignado: ['', Validators.required],
-    estado: ['Pendiente', Validators.required],
-    prioridad: ['Media', Validators.required],
-    fechaLimite: [null, Validators.required]
+    estado: ['Por hacer', Validators.required],
+    prioridad: ['Baja', Validators.required],
+    fechaFinal: [null, Validators.required]
   });
 
   getTickets(estado: string) {
@@ -196,7 +215,7 @@ drop(estadoDestino: string) {
   }
 
   getSeverity(prioridad: string): 'success' | 'warn' | 'danger' | 'info' {
-    if (prioridad === 'Alta' || prioridad === 'Crítica') return 'danger';
+    if (prioridad === 'Alta') return 'danger';
     if (prioridad === 'Media') return 'warn';
     return 'success';
   }
@@ -209,39 +228,6 @@ drop(estadoDestino: string) {
     this.form.enable(); 
     this.modalVisible = true;
   }
-
-  /*
-  editarTicket(ticket: Ticket) {
-    this.modoEdicion = true;
-    this.ticketSeleccionado = ticket;
-    const fecha = new Date(ticket.fechaLimite);
-    const fechaFormateada = fecha.toISOString().split('T')[0];
-    this.form.patchValue({
-      ...ticket,
-      fechaLimite: fechaFormateada
-    });
-    
-
-    if (this.esCreador(ticket)) {
-      this.form.enable(); 
-    } else { 
-      this.form.disable(); 
-    }
-
-    this.modalVisible = true;
-  }
-    */
-
-  /*
-    agregarComentario(inputEl: HTMLInputElement) {
-        const texto = inputEl.value.trim();
-        if (!texto || !this.ticketSeleccionado) return;
-        const nombreUsuario = (this.authService.usuario() as any)?.nombreCompleto || 'Usuario';
-        this.ticketSeleccionado?.comentarios.push({ autor: nombreUsuario, texto, fecha: new Date() });
-        inputEl.value = '';
-    }
-        */
-
 
   eliminarTicket(ticket: Ticket) {
     if (!this.esCreador(ticket)) {

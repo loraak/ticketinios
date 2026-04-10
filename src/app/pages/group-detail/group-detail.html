@@ -34,8 +34,10 @@
     }
     
     <div class="mb-5">
-        <div *ifHasPermission="['groups:mistickets']">
+        <div>
+            <div class="flex justify-content-between align-items-center px-4 pt-3">
             <h2 class="text-xl font-bold text-color mb-3">Mis Tickets</h2>
+            </div>
             <div class="flex gap-3 overflow-x-auto pb-2">
                 @for (ticket of misTickets; track ticket.id) {
                     <div class="surface-card p-3 border-round shadow-1 border-1 surface-border min-w-20rem flex justify-content-between align-items-center">
@@ -54,15 +56,21 @@
         </div>
     </div>
 
-    <div class="flex justify-content-between align-items-center mb-4">
+    <div class="flex justify-content-between align-items-center mb-4 px-4 pt-3">
+        <h1 class="m-0 text-2xl font-bold text-color">Tickets del Grupo</h1>
+    
         <div class="flex align-items-center gap-3">
-            <h1 class="m-0 text-2xl font-bold text-color">Tickets del Grupo</h1>
             <div class="p-selectbutton border-round">
                 <p-button class="mr-2" [outlined]="vistaActual !== 'kanban'" icon="pi pi-th-large" (onClick)="vistaActual = 'kanban'"></p-button>
                 <p-button [outlined]="vistaActual !== 'tabla'" icon="pi pi-list" (onClick)="vistaActual = 'tabla'"></p-button>
             </div>
+            <p-button 
+            *ifHasPermission="{ permisos: ['tickets:crear'], grupoId: grupo.id }"
+            label="Crear Ticket" 
+            icon="pi pi-plus" 
+            (onClick)="crearTicket()">
+            </p-button>
         </div>
-        <p-button *ifHasPermission="['ticket:crear']" label="Crear Ticket" icon="pi pi-plus" (onClick)="crearTicket()"></p-button>
     </div>
 
     @if (vistaActual === 'kanban') {
@@ -85,7 +93,14 @@
                                 <div class="flex justify-content-between align-items-start mb-2">
                                     <div class="font-medium text-color">{{ ticket.titulo }}</div>
                                     <div class="flex gap-1">
-                                        <p-button *ifHasPermission="['ticket:baja']" icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" size="small" (click)="$event.stopPropagation(); eliminarTicket(ticket)"></p-button>
+                                        <p-button *ifHasPermission="['ticket:baja']" 
+                                        icon="pi pi-trash" 
+                                        [text]="true" 
+                                        [rounded]="true" 
+                                        severity="danger" 
+                                        size="small" 
+                                        (click)="$event.stopPropagation(); eliminarTicket(ticket)">
+                                    </p-button>
                                     </div>
                                 </div>
 
@@ -214,9 +229,9 @@
                         <label class="block mb-1 text-sm text-color-secondary font-medium">Asignado a</label>
                         <select formControlName="asignado" class="w-full p-inputtext" style="appearance: auto;">
                             <option value="" disabled>Seleccione un usuario...</option>
-                            <!--
-                            @for (usr of usuarios; track usr) { <option [value]="usr">{{ usr }}</option> }
-                            -->
+                            @for (miembro of miembros; track miembro.usuarioId) {
+                                <option [value]="miembro.usuarioId">{{ miembro.nombreCompleto }}</option>
+                            }
                         </select>
                     </div>
                     <div class="col-6">
