@@ -24,7 +24,7 @@ import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef } from '@angular/core'
 
 interface Group {
-    id: number;
+    id: string;
     autor: string;
     nombre: string;
     integrantes: number;
@@ -143,6 +143,9 @@ export class Grupos implements OnInit {
                 this.grupos = res.data;
                 this.loading = false;
                 this.cdr.detectChanges();
+                this.grupos.forEach(g => {
+                this.permissionsSvc.refreshPermissionsForGroup(g.id);
+            });
             },
             error: () => {
                 this.loading = false;
@@ -160,9 +163,7 @@ export class Grupos implements OnInit {
         private fb: FormBuilder,
     ) {
         this.form = this.fb.group({
-            creador:       ['', Validators.required],
             nombre:      ['', Validators.required],
-            integrantes: [null, Validators.required],
             descripcion: ['', Validators.required]
         });
     }
@@ -196,6 +197,7 @@ export class Grupos implements OnInit {
                     this.grupos = this.grupos.map(g =>
                         g.id === actualizado.id ? actualizado : g
                     );
+                    this.permissionsSvc.refreshPermissionsForGroup(actualizado.id);
                     this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Grupo actualizado.' });
                     this.modalVisible = false;
                 },
@@ -210,11 +212,13 @@ export class Grupos implements OnInit {
         } else {
             this.http.post<any>('http://localhost:3000/api/grupos', {
                 ...this.form.value,
-                creadorId:     this.authService.usuario()?.sub,
+                nombre:        this.form.value.nombre,
+                descripcion:   this.form.value.descripcion,
                 creadorNombre: this.authService.usuario()?.nombreCompleto
             }).subscribe({
                 next: (res) => {
                     this.grupos = [...this.grupos, res.data[0]];
+                    this.permissionsSvc.refreshPermissionsForGroup(res.data[0].id);
                     this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Grupo creado.' });
                     this.modalVisible = false;
                 },

@@ -4,28 +4,60 @@ import { HttpClient } from '@angular/common/http';
 
 @Injectable({ providedIn: 'root' })
 export class PermissionsService {
-    private userPermissions = signal<string[]>([]);
     private http = inject(HttpClient);
+    private permissions = signal<string[]>([]);
+    private groupPermissions = signal<string[]>([]); 
+    private grupoPermissionsCache = signal<Record<string, string[]>>({});
 
     setPermissions(perms: string[]) {
-        this.userPermissions.set(perms);
+        this.permissions.set(perms);
     }
 
-    hasPermission(permiso: string): boolean {
-        return this.userPermissions().includes(permiso);
+    setGroupPermissions(perms: string[]) {
+        this.groupPermissions.set(perms);
+    }
+
+    hasPermission(permission: string): boolean {
+        return this.permissions().includes(permission);
     }
 
     hasAnyPermission(perms: string[]): boolean {
-        return perms.some(p => this.hasPermission(p));
+        return perms.some(p => this.permissions().includes(p));
     }
 
-    hasAnyGroupPermission(grupoId: string, permisos: string[]): Observable<boolean> {
-        return this.http.get<any>(`http://localhost:3000/api/grupos/${grupoId}/permisos`).pipe(
-            map((res: any) => {
-                const permisosGrupo: string[] = res.data ?? [];
-                return permisos.some(p => permisosGrupo.includes(p));
-            }),
-            catchError(() => of(false))
-        );
+    hasGroupPermission(permission: string): boolean {
+        return this.groupPermissions().includes(permission);
+    }
+
+    hasAnyGroupPermission(perms: string[]): boolean {
+        return perms.some(p => this.groupPermissions().includes(p));
+    }
+
+    refreshPermissionsForGroup(groupId: string, onDone?: () => void): void {
+        this.http.get<any>(`http://localhost:3000/api/grupos/${groupId}/permisos`).subscribe({
+            next: (res) => {
+                const permisos = res.data ?? [];
+                // ← guarda en caché por grupoId
+                this.grupoPermissionsCache.update(cache => ({
+                    ...cache,
+                    [groupId]: permisos
+                }));
+                this.groupPermissions.set(permisos);
+                onDone?.();
+            },
+            error: () => {
+                this.groupPermissions.set([]);
+                onDone?.();
+            }
+        });
+    }
+
+    hasPermissionInGroup(groupId: string, permiso: string): boolean {
+        return this.grupoPermissionsCache()[groupId]?.includes(permiso) ?? false;
+    }
+
+    clearGroupPermissions() {
+        this.groupPermissions.set([]);
+        this.grupoPermissionsCache.set({});
     }
 }

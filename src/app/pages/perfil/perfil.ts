@@ -112,7 +112,7 @@ export class Perfil {
             formValue.fechaNacimiento = `${day}/${month}/${year}`;
         }
 
-        this.http.put(`http://localhost:3000/api/auth/update/${id}`, formValue).subscribe({
+        this.http.put(`http://localhost:3000/api/auth/update`, formValue).subscribe({
             next: () => {
                 this.loading = false;
                 this.modalVisible = false; 
@@ -147,7 +147,7 @@ export class Perfil {
                 const id = this.authService.usuario()?.id;
                 if (!id) return;
 
-                this.http.patch(`http://localhost:3000/api/auth/baja/${id}`, {}).subscribe({
+                this.http.patch(`http://localhost:3000/api/auth/baja`, {}).subscribe({
                     next: () => {
                         this.messageService.add({
                             severity: 'warn',

@@ -65,7 +65,7 @@
                 <p-button [outlined]="vistaActual !== 'tabla'" icon="pi pi-list" (onClick)="vistaActual = 'tabla'"></p-button>
             </div>
             <p-button 
-            *ifHasPermission="{ permisos: ['tickets:crear'], grupoId: grupo.id }"
+            *ifHasPermission="{ permisos: ['tickets:crear'], esGrupo: true }"
             label="Crear Ticket" 
             icon="pi pi-plus" 
             (onClick)="crearTicket()">
@@ -75,53 +75,58 @@
 
     @if (vistaActual === 'kanban') {
         <div class="flex gap-4 overflow-x-auto pb-3">
-            @for (estado of estados; track estado) {
-                
-                <div class="flex-1 min-w-15rem surface-section p-3 border-round border-1 surface-border" pDroppable="tickets" (onDrop)="drop(estado)">
-                    
-                    <div class="flex justify-content-between align-items-center mb-3">
-                        <h3 class="m-0 text-lg font-semibold text-color">{{ estado }}</h3>
-                        <p-tag [value]="getTickets(estado).length.toString()" severity="info"></p-tag>
+            @for (estado of estados; track estado.id) {
+        <div class="flex-1 min-w-15rem surface-section p-3 border-round border-1 surface-border"
+            pDroppable="tickets" (onDrop)="drop(estado.nombre)">
+            
+            <div class="flex justify-content-between align-items-center mb-3">
+                <h3 class="m-0 text-lg font-semibold text-color">{{ estado.nombre }}</h3>
+                <p-tag [value]="getTickets(estado.nombre).length.toString()" severity="info"></p-tag>
+            </div>
+
+            <div class="flex flex-column gap-3">
+                @for (ticket of getTickets(estado.nombre); track ticket.id) {
+                    <div class="surface-card p-3 border-round shadow-1 border-1 surface-border cursor-pointer"
+                        pDraggable="tickets"
+                        (onDragStart)="dragStart(ticket)"
+                        (onDragEnd)="dragEnd()"
+                        (click)="editarTicket(ticket)">
+
+                        <div class="flex justify-content-between align-items-start mb-2">
+                            <div class="font-medium text-color">{{ ticket.titulo }}</div>
+                            <p-button *ifHasPermission="{ permisos: ['tickets:eliminar'], esGrupo: true }"
+                                icon="pi pi-trash"
+                                [text]="true"
+                                [rounded]="true"
+                                severity="danger"
+                                size="small"
+                                (click)="$event.stopPropagation(); eliminarTicket(ticket)">
+                            </p-button>
+                        </div>
+
+                        <div class="mb-2">
+                            <p-tag [value]="ticket.prioridad" [severity]="getSeverity(ticket.prioridad)"></p-tag>
+                        </div>
+
+                        <div class="text-sm text-color-secondary flex flex-column gap-1">
+                            <span class="flex align-items-center gap-2">
+                                <i class="pi pi-user text-xs"></i> Creado por: {{ ticket.autor }}
+                            </span>
+                            <span class="flex align-items-center gap-2">
+                                <i class="pi pi-user text-xs"></i> Asignado a: {{ ticket.asignado }}
+                            </span>
+                            <span class="flex align-items-center gap-2">
+                                <i class="pi pi-calendar text-xs"></i> Vence: {{ ticket.fechaFinal | date:'dd/MM/yyyy' }}
+                            </span>
+                        </div>
                     </div>
-
-                    <div class="flex flex-column gap-3">
-                        @for (ticket of getTickets(estado); track ticket.id) {
-                            <div class="surface-card p-3 border-round shadow-1 border-1 surface-border transition-colors transition-duration-150 cursor-pointer"
-                                pDraggable="tickets" 
-                                (onDragStart)="dragStart(ticket)" 
-                                (onDragEnd)="dragEnd()">
-                                <div class="flex justify-content-between align-items-start mb-2">
-                                    <div class="font-medium text-color">{{ ticket.titulo }}</div>
-                                    <div class="flex gap-1">
-                                        <p-button *ifHasPermission="['ticket:baja']" 
-                                        icon="pi pi-trash" 
-                                        [text]="true" 
-                                        [rounded]="true" 
-                                        severity="danger" 
-                                        size="small" 
-                                        (click)="$event.stopPropagation(); eliminarTicket(ticket)">
-                                    </p-button>
-                                    </div>
-                                </div>
-
-                                <div class="mb-2">
-                                    <p-tag [value]="ticket.prioridad" [severity]="getSeverity(ticket.prioridad)"></p-tag>
-                                </div>
-                                
-                                <div class="text-sm text-color-secondary flex flex-column gap-1">
-                                    <span class="flex align-items-center gap-2"><i class="pi pi-user text-xs"></i> Creado por: {{ ticket.autor }}</span>
-                                    <span class="flex align-items-center gap-2"><i class="pi pi-user text-xs"></i> Asignado a: {{ ticket.asignado }}</span>
-                                    <span class="flex align-items-center gap-2"><i class="pi pi-calendar text-xs"></i> Vence: {{ ticket.fechaFinal | date:'dd/MM/yyyy' }}</span>
-                                </div>
-                            </div>
-
-                        } @empty {
-                            <p class="text-sm text-color-secondary text-center font-italic m-0 py-2">Sin tickets</p>
-                        }
-                    </div>
-                </div>
+                } @empty {
+                    <p class="text-sm text-color-secondary text-center font-italic m-0 py-2">Sin tickets</p>
             }
         </div>
+    </div>
+}
+</div>
     } @else { 
         <div class="surface-card p-3 border-round shadow-1 border-1 surface-border">
             <p-table #dt [value]="tickets" [paginator]="true" [rows]="10" 
@@ -138,34 +143,40 @@
 
                 <ng-template pTemplate="header">
                     <tr>
-                        <th pSortableColumn="id">Título <p-sortIcon field="id"></p-sortIcon></th>
-                        <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
-                        <th pSortableColumn="autorId">Creado por <p-sortIcon field="autorId"></p-sortIcon></th>
-                        <th pSortableColumn="asignadoId">Asignado a <p-sortIcon field="asignadoId"></p-sortIcon></th>
-                        <th pSortableColumn="prioridad">Prioridad <p-sortIcon field="prioridad"></p-sortIcon></th>
+                        <th pSortableColumn="titulo">Título <p-sortIcon field="titulo"></p-sortIcon></th>
+                        <th>Estado</th>
+                        <th pSortableColumn="autor">Creado por <p-sortIcon field="autor"></p-sortIcon></th>
+                        <th pSortableColumn="asignado">Asignado a <p-sortIcon field="asignado"></p-sortIcon></th>
+                        <th>Prioridad</th>
                         <th pSortableColumn="fechaFinal">Fecha Límite <p-sortIcon field="fechaFinal"></p-sortIcon></th>
                         <th class="text-center">Acciones</th>
                     </tr>
                     <tr>
                         <th><p-columnFilter type="text" field="titulo" matchMode="contains" [showMenu]="false"></p-columnFilter></th>
                         <th>
-                            <p-columnFilter field="estado" matchMode="equals" [showMenu]="false">
+                            <p-columnFilter field="estado" matchMode="contains" [showMenu]="false">
                                 <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                                    <select [value]="value || ''" (change)="filter($any($event.target).value)" class="w-full p-inputtext p-2" style="appearance: auto;">
+                                    <select class="w-full p-inputtext" style="appearance: auto;"
+                                        [value]="value" (change)="filter($any($event.target).value)">
                                         <option value="">Todos</option>
-                                        @for (est of estados; track est) { <option [value]="est">{{ est }}</option> }
+                                        @for (est of estados; track est.id) {
+                                            <option [value]="est.nombre">{{ est.nombre }}</option>
+                                        }
                                     </select>
                                 </ng-template>
                             </p-columnFilter>
                         </th>
-                        <th><p-columnFilter type="text" field="creador" matchMode="contains" [showMenu]="false"></p-columnFilter></th>
+                        <th><p-columnFilter type="text" field="autor" matchMode="contains" [showMenu]="false"></p-columnFilter></th>
                         <th><p-columnFilter type="text" field="asignado" matchMode="contains" [showMenu]="false"></p-columnFilter></th>
                         <th>
-                            <p-columnFilter field="prioridad" matchMode="equals" [showMenu]="false">
+                            <p-columnFilter field="prioridad" matchMode="contains" [showMenu]="false">
                                 <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                                    <select [value]="value || ''" (change)="filter($any($event.target).value)" class="w-full p-inputtext p-2" style="appearance: auto;">
+                                    <select class="w-full p-inputtext" style="appearance: auto;"
+                                        [value]="value" (change)="filter($any($event.target).value)">
                                         <option value="">Todas</option>
-                                        @for (prio of prioridades; track prio) { <option [value]="prio">{{ prio }}</option> }
+                                        @for (prio of prioridades; track prio.id) {
+                                            <option [value]="prio.nombre">{{ prio.nombre }}</option>
+                                        }
                                     </select>
                                 </ng-template>
                             </p-columnFilter>
@@ -177,9 +188,6 @@
 
                 <ng-template pTemplate="body" let-ticket>
                     <tr>
-                        <!--
-                        <td class="font-medium cursor-pointer text-primary" (click)="editarTicket(ticket)">#{{ ticket.id }} - {{ ticket.titulo }}</td>
-                        -->
                         <td class="font-medium cursor-pointer text-primary">{{ ticket.titulo }}</td>
                         <td><p-tag [value]="ticket.estado" severity="info"></p-tag></td>
                         <td>{{ ticket.autor }}</td>
@@ -187,9 +195,31 @@
                         <td><p-tag [value]="ticket.prioridad" [severity]="getSeverity(ticket.prioridad)"></p-tag></td>
                         <td>{{ ticket.fechaFinal | date:'dd/MM/yyyy' }}</td>
                         <td class="text-center">
-                            @if (esCreador(ticket)) {
-                                <p-button *ifHasPermission="['ticket:baja']" icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" size="small" (click)="$event.stopPropagation(); eliminarTicket(ticket)"></p-button>
-                            }
+                            <div class="flex gap-1 justify-content-center">
+                                @if (esCreador(ticket)) {
+                                <p-button 
+                                    *ifHasPermission="{ permisos: ['tickets:editar'], esGrupo: true }"
+                                    icon="pi pi-pencil" 
+                                    [text]="true" 
+                                    [rounded]="true" 
+                                    size="small"
+                                    pTooltip="Editar"
+                                    (click)="editarTicket(ticket)">
+                                </p-button>
+                                }
+                                @if (esCreador(ticket)) {
+                                    <p-button 
+                                        *ifHasPermission="{ permisos: ['tickets:eliminar'], esGrupo: true }"
+                                        icon="pi pi-trash" 
+                                        [text]="true" 
+                                        [rounded]="true" 
+                                        severity="danger" 
+                                        size="small"
+                                        pTooltip="Eliminar"
+                                        (click)="eliminarTicket(ticket)">
+                                    </p-button>
+                                }
+                            </div>
                         </td>
                     </tr>
                 </ng-template>
@@ -207,36 +237,75 @@
         <div class="col-12 md:col-6 flex flex-column gap-4 border-right-none md:border-right-1 surface-border pr-0 md:pr-4">
             <form [formGroup]="form" class="flex flex-column gap-3">
                 <div>
-                    <label class="block mb-1 text-sm text-color-secondary font-medium">Título</label>
-                    <input type="text" pInputText formControlName="titulo" class="w-full">
+                    <label class="block mb-1 text-sm text-color-secondary font-medium">Título *</label>
+                    <input type="text" pInputText formControlName="titulo" class="w-full"
+                        [class.ng-invalid]="form.get('titulo')?.invalid && form.get('titulo')?.touched">
+                    @if (form.get('titulo')?.invalid && form.get('titulo')?.touched) {
+                        <small class="text-red-500">El título es obligatorio.</small>
+                    }
                 </div>
+
+                <div>
+                    <label class="block mb-1 text-sm text-color-secondary font-medium">Descripción</label>
+                    <textarea 
+                        pInputTextarea 
+                        formControlName="descripcion" 
+                        class="w-full p-inputtext" 
+                        rows="3" 
+                        style="resize: none;">
+                    </textarea>
+                </div>
+
                 <div class="grid">
                     <div class="col-6">
-                        <label class="block mb-1 text-sm text-color-secondary font-medium">Estado</label>
-                        <select formControlName="estado" class="w-full p-inputtext" style="appearance: auto;">
-                            @for (est of estados; track est) { <option [value]="est">{{ est }}</option> }
+                        <label class="block mb-1 text-sm text-color-secondary font-medium">Estado *</label>
+                        <select formControlName="estadoId" class="w-full p-inputtext" style="appearance: auto;"
+                            [class.ng-invalid]="form.get('estadoId')?.invalid && form.get('estadoId')?.touched">
+                            <option value="" disabled>Seleccione estado...</option>
+                            @for (est of estados; track est.id) {
+                                <option [value]="est.id">{{ est.nombre }}</option>
+                            }
                         </select>
+                        @if (form.get('estadoId')?.invalid && form.get('estadoId')?.touched) {
+                            <small class="text-red-500">El estado es obligatorio.</small>
+                        }
                     </div>
                     <div class="col-6">
-                        <label class="block mb-1 text-sm text-color-secondary font-medium">Prioridad</label>
-                        <select formControlName="prioridad" class="w-full p-inputtext" style="appearance: auto;">
-                            @for (prio of prioridades; track prio) { <option [value]="prio">{{ prio }}</option> }
+                        <label class="block mb-1 text-sm text-color-secondary font-medium">Prioridad *</label>
+                        <select formControlName="prioridadId" class="w-full p-inputtext" style="appearance: auto;"
+                            [class.ng-invalid]="form.get('prioridadId')?.invalid && form.get('prioridadId')?.touched">
+                            <option value="" disabled>Seleccione prioridad...</option>
+                            @for (prio of prioridades; track prio.id) {
+                                <option [value]="prio.id">{{ prio.nombre }}</option>
+                            }
                         </select>
+                        @if (form.get('prioridadId')?.invalid && form.get('prioridadId')?.touched) {
+                            <small class="text-red-500">La prioridad es obligatoria.</small>
+                        }
                     </div>
                 </div>
+
                 <div class="grid">
                     <div class="col-6">
-                        <label class="block mb-1 text-sm text-color-secondary font-medium">Asignado a</label>
-                        <select formControlName="asignado" class="w-full p-inputtext" style="appearance: auto;">
+                        <label class="block mb-1 text-sm text-color-secondary font-medium">Asignado a *</label>
+                        <select formControlName="asignado" class="w-full p-inputtext" style="appearance: auto;"
+                            [class.ng-invalid]="form.get('asignado')?.invalid && form.get('asignado')?.touched">
                             <option value="" disabled>Seleccione un usuario...</option>
                             @for (miembro of miembros; track miembro.usuarioId) {
                                 <option [value]="miembro.usuarioId">{{ miembro.nombreCompleto }}</option>
                             }
                         </select>
+                        @if (form.get('asignado')?.invalid && form.get('asignado')?.touched) {
+                            <small class="text-red-500">Debes asignar el ticket a alguien.</small>
+                        }
                     </div>
                     <div class="col-6">
-                        <label class="block mb-1 text-sm text-color-secondary font-medium">Fecha Límite</label>
-                        <input type="date" pInputText formControlName="fechaLimite" class="w-full">
+                        <label class="block mb-1 text-sm text-color-secondary font-medium">Fecha Límite *</label>
+                        <input type="date" pInputText formControlName="fechaFinal" class="w-full"
+                            [class.ng-invalid]="form.get('fechaFinal')?.invalid && form.get('fechaFinal')?.touched">
+                        @if (form.get('fechaFinal')?.invalid && form.get('fechaFinal')?.touched) {
+                            <small class="text-red-500">La fecha límite es obligatoria.</small>
+                        }
                     </div>
                 </div>
             </form>
@@ -254,18 +323,29 @@
                     </div>
                 }
             </div>
-            <!--
             <div class="flex gap-2 mb-4">
-                <input #comentarioInput type="text" pInputText placeholder="Añadir comentario..." class="w-full text-sm" (keyup.enter)="agregarComentario(comentarioInput)">
-                <p-button icon="pi pi-send" (onClick)="agregarComentario(comentarioInput)"></p-button>
+                <input 
+                    #comentarioInput 
+                    type="text" 
+                    pInputText 
+                    placeholder="Añadir comentario..." 
+                    class="w-full text-sm"
+                    [disabled]="!permissionsSvc.hasAnyGroupPermission(['tickets:comentario'])"
+                    (keyup.enter)="permissionsSvc.hasAnyGroupPermission(['tickets:comentario']) && agregarComentario(comentarioInput)">
+                <p-button 
+                    icon="pi pi-send" 
+                    (onClick)="agregarComentario(comentarioInput)"
+                    *ifHasPermission="{ permisos: ['tickets:comentario'], esGrupo: true }">
+                </p-button>
             </div>
-            -->
-
             <h4 class="m-0 mb-3 text-color">Historial</h4>
             <div class="flex-1 overflow-y-auto" style="max-height: 100px;">
                 <ul class="m-0 pl-3 text-sm text-color-secondary">
                     @for (hist of ticketSeleccionado.historial?.slice()?.reverse(); track hist.fecha) {
-                        <li class="mb-1">{{ hist.accion }} ({{ hist.fecha | date:'dd/MM HH:mm' }})</li>
+                        <li class="mb-1">
+                            <strong>{{ hist.usuario }}</strong> — {{ hist.accion }} 
+                            <span class="text-xs">({{ hist.fecha | date:'dd/MM HH:mm' }})</span>
+                        </li>
                     }
                 </ul>
             </div>
@@ -274,13 +354,21 @@
     
     <ng-template pTemplate="footer">
         <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="modalVisible = false"></p-button>
-        
-        @if (modoEdicion && ticketSeleccionado && esCreador(ticketSeleccionado)) {
-            <p-button *ifHasPermission="['ticket:baja']" icon="pi pi-trash" [text]="true" [rounded]="true" severity="danger" (onClick)="eliminarTicket(ticketSeleccionado)"></p-button>
+        @if (modoEdicion && form.enabled) {
+            <p-button 
+                *ifHasPermission="{ permisos: ['tickets:editar'], esGrupo: true }" 
+                label="Guardar" 
+                (onClick)="guardarTicket()" 
+                [disabled]="form.invalid">
+            </p-button>
         }
-        
-        @if (form.enabled) {
-            <p-button *ifHasPermission="['ticket:editar']" label="Guardar" (onClick)="guardarTicket()" [disabled]="form.invalid"></p-button>
+
+        @if (!modoEdicion && grupo) {
+            <p-button 
+                *ifHasPermission="{ permisos: ['tickets:crear'], esGrupo: true }"
+                label="Crear" 
+                (onClick)="guardarTicket()">
+            </p-button>
         }
     </ng-template>
 </p-dialog>

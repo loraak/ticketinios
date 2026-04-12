@@ -104,16 +104,6 @@
 
         <div>
             <p-floatlabel>
-                <input id="usuario" type="text" pInputText [formControl]="f['usuario']" class="w-full">
-                <label for="usuario">Usuario</label>
-            </p-floatlabel>
-            @if (f['usuario'].touched && f['usuario'].errors?.['required']) {
-                <small class="p-error block mt-1">El usuario es requerido.</small>
-            }
-        </div>
-
-        <div>
-            <p-floatlabel>
                 <input id="email" type="email" pInputText [formControl]="f['email']" class="w-full">
                 <label for="email">Email</label>
             </p-floatlabel>

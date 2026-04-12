@@ -1,39 +1,47 @@
-import { Directive, Input, OnInit, TemplateRef, ViewContainerRef } from '@angular/core';
+import { Directive, effect, Input, OnInit, TemplateRef, ViewContainerRef } from '@angular/core';
 import { PermissionsService } from '../services/permissions.service';
+
+export type PermisoConfig = string | string[] | { permisos: string[], esGrupo: boolean };
 
 @Directive({
     selector: '[ifHasPermission]',
     standalone: true
 })
 export class HasPermissionDirective implements OnInit {
-    @Input('ifHasPermission') config: string | string[] | { permisos: string[], grupoId: string } = '';
+    @Input('ifHasPermission') config: PermisoConfig = '';
 
     constructor(
         private permissionsSvc: PermissionsService,
         private templateRef: TemplateRef<any>,
         private viewContainer: ViewContainerRef
-    ) {}
+    ) {
+        effect(() => {
+            this.actualizarVista();
+        });
+    }
 
     ngOnInit() {
+        this.actualizarVista();
+    }
+
+    private actualizarVista() {
         let permisosArray: string[];
-        let grupoId: string | null = null;
-    
+        let esDeGrupo = false;
+
         if (typeof this.config === 'object' && !Array.isArray(this.config)) {
-            permisosArray = this.config.permisos;
-            grupoId = this.config.grupoId;
+            permisosArray = (this.config as { permisos: string[], esGrupo: boolean }).permisos;
+            esDeGrupo = true;
         } else {
             permisosArray = Array.isArray(this.config) ? this.config : [this.config];
         }
-    
-        if (grupoId) {
-            this.permissionsSvc.hasAnyGroupPermission(grupoId, permisosArray)
-                .subscribe(tiene => {
-                    if (tiene) this.viewContainer.createEmbeddedView(this.templateRef);
-                });
-        } else {
-            if (this.permissionsSvc.hasAnyPermission(permisosArray)) {
-                this.viewContainer.createEmbeddedView(this.templateRef);
-            }
+
+        const tiene = esDeGrupo
+            ? this.permissionsSvc.hasAnyGroupPermission(permisosArray)
+            : this.permissionsSvc.hasAnyPermission(permisosArray);
+
+        this.viewContainer.clear();
+        if (tiene) {
+            this.viewContainer.createEmbeddedView(this.templateRef);
         }
     }
 }
